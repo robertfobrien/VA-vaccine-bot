@@ -1,0 +1,3 @@
+## The Media Kit *GHOST SCRAPER*
+
+Will add more details...
