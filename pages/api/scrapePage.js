@@ -10,26 +10,102 @@ export default (req, res) => {
     const puppeteer = require("puppeteer");
 
     (async () => { 
-    var browser = await puppeteer.launch({headless: true});
+    var browser = await puppeteer.launch({headless: false});
     var page = await browser.newPage(); 
+
     //gos to the facebook link
     await page.goto(req.body.facebooklink, {waitUntil: 'networkidle2'});
 
     let facebookStats = await page.evaluate(() => {
-        var followers = document.querySelector('span[class="d2edcug0 hpfvmrgz qv66sw1b c1et5uql oi732d6d ik7dh3pa fgxwclzu a8c37x1j keod5gw0 nxhoafnm aigsh9s9 d9wwppkn fe6kdd0r mau55g9w c8b282yb iv3no6db jq4qci2q a3bd9o3v knj5qynh oo9gr5id hzawbc8m"]').innerText;
-        var name = document.querySelector('h1[class="gmql0nx0 l94mrbxd p1ri9a11 lzcic4wl bp9cbjyn j83agx80"]').innerText;
-        var website = document.querySelector('span[class="d2edcug0 hpfvmrgz qv66sw1b c1et5uql oi732d6d ik7dh3pa fgxwclzu a8c37x1j keod5gw0 nxhoafnm aigsh9s9 d9wwppkn fe6kdd0r mau55g9w c8b282yb iv3no6db jq4qci2q a3bd9o3v knj5qynh oo9gr5id hzawbc8m"] > a').innerText;
-        //must be in the ' ....facebook.com..../about' page
-        //var category = document.querySelector('div[class="ii04i59q a3bd9o3v jq4qci2q oo9gr5id"]').innerText;
+        var name = document.querySelector('a[class="_64-f"]').innerText;
+        var likes = document.querySelectorAll('div[class="_4-u2 _6590 _3xaf _4-u8"] > div')[1].innerText;
+        var followers = document.querySelectorAll('div[class="_4-u2 _6590 _3xaf _4-u8"] > div')[2].innerText;
+        var website = document.querySelector('#u_0_q_x4').innerText;
+        var category = document.querySelectorAll('div[class="_4-u2 _u9q _3xaf _4-u8"] > div ')[3].innerText;
+
+        var type = 'facebook';
+        var url = req.body.facebooklink;
 
         return {
-            name,
+            type,
+            url,
+            likes,
             followers,
             website,
+            category,
         }
     })
 
     console.log(facebookStats);
+
+    //goes to the youtube link 
+    const ytAboutLink = req.body.youtubelink + '/about';
+    await page.goto(ytAboutLink);
+    //makes sure the page is loaded
+    await document.querySelector('#channel-name').innerText;
+
+    let youtubeStats = await page.evaluate(() => {
+
+        var name = document.querySelector('#channel-name').innerText;
+        var description = document.querySelector('#description').innerText;
+        //var rightColumn = document.querySelectorAll('#right-column > yt-formatted-string')[2].innerText;
+        var views = '100,000';
+        var subscribers = document.querySelector('#subscriber-count').innerText;
+
+
+        var type = 'youtube';
+        var url = req.body.youtubelink;
+
+        return {
+            type,
+            url,
+            name,
+            description,
+            views,
+            subscribers,
+        }
+    })
+
+    console.log(youtubeStats);
+
+    //go to instagram
+    await page.goto(req.body.instagramlink, {waitUntil: 'networkidle2'});
+
+    let instagramStats = await page.evaluate(() => {
+
+        const mainStats = document.querySelectorAll('span[class="g47SY "]');
+        
+        var username = document.querySelector('h2[class="_7UhW9       fKFbl yUEEX   KV-D4              fDxYl     "]').innerText;
+        var name = document.querySelector('h1[class="rhpdm"]').innerText;
+
+        //change title to innerText to be formatted the way instagram does. 
+        var numPosts = mainStats[0].innerText; 
+        var numFollowers = mainStats[1].title;
+        var numFollowing = mainStats[2].innerText;
+
+        var bio = document.querySelector('div[class="-vDIg"] > span').innerText;
+        var website = document.querySelector('div[class="-vDIg"] > a').innerText;
+
+        var type = 'instagram';
+        var url = req.body.instagramlink;
+
+        return {
+            type,
+            url,
+            name,
+            username,
+            numFollowers,
+            numPosts,
+            numFollowing,
+            bio, 
+            website,
+        }
+    })
+
+    console.log(instagramStats);
+
+
+    await browser.close();
 
     })();
 

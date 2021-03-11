@@ -15,21 +15,21 @@ export default function Home() {
   return (
     <div className={styles.container}>
       <Head>
-        <title>Ghost Scrape</title>
+        <title>Media Scraper</title>
         <link rel="icon" href="/ghosticon.ico" />
       </Head>
 
       <main className={styles.main}>
-        <h1 className={styles.title}>
-          Mediakits Ghost Scraper 1.0
-        </h1>
+        <h3 className={styles.title}>
+          Mediakits Ghost Media Scraper 1.0
+        </h3>
 
     {/** Form in here, enter in info into form, on submit, data goes to onSubmit */}
     {/* "handleSubmit" will validate your inputs before invoking "onSubmit" */}
     <form onSubmit={handleSubmit(onSubmit)}>
     <div>
-      <text>Name &emsp;&emsp;&emsp;&nbsp;&nbsp;</text>
-      <input name="name" ref={register} />
+      <text>Name &emsp;&emsp;&emsp;&nbsp;&nbsp;&nbsp;</text>
+      <input size='large' name="name" ref={register} />
       </div>
     <div>
     <text>Facebook link &nbsp;</text>
@@ -40,7 +40,7 @@ export default function Home() {
       <input name="instagramlink" ref={register} />
       </div>
     <div>
-    <text>Youtube link &nbsp;&nbsp;&nbsp;</text>
+    <text>Youtube link &nbsp;&nbsp;&nbsp;&nbsp;</text>
       <input name="youtubelink" ref={register} />
       </div>
       
