@@ -8,6 +8,7 @@ import { Puppeteer } from "puppeteer"
 export default (req, res) => {
 
     const puppeteer = require("puppeteer");
+    const fs = require('fs');
 
     (async () => { 
     var browser = await puppeteer.launch({headless: false});
@@ -18,8 +19,8 @@ export default (req, res) => {
 
     let facebookStats = await page.evaluate(() => {
         var name = document.querySelector('a[class="_64-f"]').innerText;
-        var likes = document.querySelectorAll('div[class="_4-u2 _6590 _3xaf _4-u8"] > div')[1].innerText;
-        var followers = document.querySelectorAll('div[class="_4-u2 _6590 _3xaf _4-u8"] > div')[2].innerText;
+        var likes = document.querySelectorAll('div[class="_4-u2 _6590 _3xaf _4-u8"] > div > div > div')[1].innerText
+        var followers = document.querySelectorAll('div[class="_4-u2 _6590 _3xaf _4-u8"] > div > div')[2].innerText;
         var website = document.querySelector('#u_0_q_x4').innerText;
         var category = document.querySelectorAll('div[class="_4-u2 _u9q _3xaf _4-u8"] > div ')[3].innerText;
 
@@ -29,6 +30,7 @@ export default (req, res) => {
         return {
             type,
             url,
+            name,
             likes,
             followers,
             website,
@@ -38,9 +40,10 @@ export default (req, res) => {
 
     console.log(facebookStats);
 
-    //goes to the youtube link 
+    //goes to the youtube link (routed to about page)
     const ytAboutLink = req.body.youtubelink + '/about';
-    await page.goto(ytAboutLink);
+    await page.goto(ytAboutLink, {waitUntil: 'networkidle2'});
+
     //makes sure the page is loaded
     await document.querySelector('#channel-name').innerText;
 
@@ -92,25 +95,33 @@ export default (req, res) => {
         return {
             type,
             url,
-            name,
             username,
+            name,
+            bio, 
+            website,
             numFollowers,
             numPosts,
             numFollowing,
-            bio, 
-            website,
         }
     })
 
     console.log(instagramStats);
 
+    /* planning on how im gonna output this thing
+    obj = {facebookstats, instagramstats, youtubestats}
+    fs.writeFile("./" + new Date().toString() + ".txt", JSON.stringify(obj), function(err) {
+        if(err) {
+            return console.log(err);
+        }
+    
+        console.log("The file was saved!");
+    }); 
+    */
 
     await browser.close();
 
     })();
 
-
-    
 
     res.status(200).json({ info: 'scrape page', name: req.body.name })
   }
