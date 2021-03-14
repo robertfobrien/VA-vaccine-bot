@@ -133,6 +133,37 @@ export default (req, res) => {
         console.log(instagramStats);
     }
  
+    if(req.body.facebooklink != "")
+    {    
+    (async () => { 
+        await page.goto(req.body.facebooklink, {waitUntil: 'networkidle2'});
+
+        let facebookStats = await page.evaluate(() => {
+            var name = document.querySelector('a[class="_64-f"]').innerText;
+            var likes = document.querySelectorAll('div[class="_4-u2 _6590 _3xaf _4-u8"] > div > div > div')[1].innerText
+            var followers = document.querySelectorAll('div[class="_4-u2 _6590 _3xaf _4-u8"] > div > div')[2].innerText;
+            var website = document.querySelector('#u_0_q_x4').innerText;
+            var category = document.querySelectorAll('div[class="_4-u2 _u9q _3xaf _4-u8"] > div ')[3].innerText;
+
+            var type = 'facebook';
+            var url = req.body.facebooklink;
+
+            return {
+                type,
+                url,
+                name,
+                likes,
+                followers,
+                website,
+                category,
+            }
+        })
+
+        console.log(facebookStats);
+    })();
+}
+
+
         await browser.close();
 
         })();
