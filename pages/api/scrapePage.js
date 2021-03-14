@@ -1,126 +1,141 @@
-import { Puppeteer } from "puppeteer"
+const puppeteer = require("puppeteer");
+const ig = require('instagram-scraping');
 
-
-// This is the script
-// based on req.body, call some api to get a webpage
-// scrap page
-// return json here
 export default (req, res) => {
 
-    const puppeteer = require("puppeteer");
-    const fs = require('fs');
-
     (async () => { 
-    var browser = await puppeteer.launch({headless: false});
-    var page = await browser.newPage(); 
+        let browser = await puppeteer.launch({headless: true}); //turn to FALSE to debug
+        console.log('SCRAPING...')
+        let page = await browser.newPage(); 
 
-    //gos to the facebook link
-    await page.goto(req.body.facebooklink, {waitUntil: 'networkidle2'});
-
-    let facebookStats = await page.evaluate(() => {
-        var name = document.querySelector('a[class="_64-f"]').innerText;
-        var likes = document.querySelectorAll('div[class="_4-u2 _6590 _3xaf _4-u8"] > div > div > div')[1].innerText
-        var followers = document.querySelectorAll('div[class="_4-u2 _6590 _3xaf _4-u8"] > div > div')[2].innerText;
-        var website = document.querySelector('#u_0_q_x4').innerText;
-        var category = document.querySelectorAll('div[class="_4-u2 _u9q _3xaf _4-u8"] > div ')[3].innerText;
-
-        var type = 'facebook';
-        var url = req.body.facebooklink;
-
-        return {
-            type,
-            url,
-            name,
-            likes,
-            followers,
-            website,
-            category,
-        }
-    })
-
-    console.log(facebookStats);
-
-    //goes to the youtube link (routed to about page)
-    const ytAboutLink = req.body.youtubelink + '/about';
-    await page.goto(ytAboutLink, {waitUntil: 'networkidle2'});
-
-    //makes sure the page is loaded
-    await document.querySelector('#channel-name').innerText;
-
-    let youtubeStats = await page.evaluate(() => {
-
-        var name = document.querySelector('#channel-name').innerText;
-        var description = document.querySelector('#description').innerText;
-        //var rightColumn = document.querySelectorAll('#right-column > yt-formatted-string')[2].innerText;
-        var views = '100,000';
-        var subscribers = document.querySelector('#subscriber-count').innerText;
-
-
-        var type = 'youtube';
-        var url = req.body.youtubelink;
-
-        return {
-            type,
-            url,
-            name,
-            description,
-            views,
-            subscribers,
-        }
-    })
-
-    console.log(youtubeStats);
-
-    //go to instagram
-    await page.goto(req.body.instagramlink, {waitUntil: 'networkidle2'});
-
-    let instagramStats = await page.evaluate(() => {
-
-        const mainStats = document.querySelectorAll('span[class="g47SY "]');
+        if(req.body.youtubelink != "")
+        {
+        await page.goto(req.body.youtubelink + '/about', {waitUntil: 'networkidle2'});
         
-        var username = document.querySelector('h2[class="_7UhW9       fKFbl yUEEX   KV-D4              fDxYl     "]').innerText;
-        var name = document.querySelector('h1[class="rhpdm"]').innerText;
+        let youtubeStats = await page.evaluate(() => {
 
-        //change title to innerText to be formatted the way instagram does. 
-        var numPosts = mainStats[0].innerText; 
-        var numFollowers = mainStats[1].title;
-        var numFollowing = mainStats[2].innerText;
+            var name = document.querySelector('#channel-name > div > div').innerText;
+            var description = document.querySelector('#description').innerText;
+            var subscriberString = document.querySelector('#subscriber-count').innerText;
+            subscriberString = subscriberString.slice(0, subscriberString.length-12);
 
-        var bio = document.querySelector('div[class="-vDIg"] > span').innerText;
-        var website = document.querySelector('div[class="-vDIg"] > a').innerText;
+            var endLetter = document.querySelector('#subscriber-count').innerText.slice(0,document.querySelector('#subscriber-count').innerText.length-12);
+            endLetter = endLetter.slice(endLetter.length-1);
 
-        var type = 'instagram';
-        var url = req.body.instagramlink;
+            var subscriberPrefix = subscriberString.slice(0,subscriberString.length-1);
 
-        return {
-            type,
-            url,
-            username,
-            name,
-            bio, 
-            website,
-            numFollowers,
-            numPosts,
-            numFollowing,
+            if (endLetter == "K")
+                var subscriberNum = parseInt(parseFloat(subscriberPrefix)*1000);
+            else if (endLetter == "M")
+                var subscriberNum = parseInt(parseFloat(subscriberPrefix)*1000000);
+            else 
+                var subscriberNum = parseInt(subscriberString);
+
+
+            var viewsString = document.querySelectorAll('#right-column > yt-formatted-string')[2].innerText;
+            viewsString = viewsString.slice(0,viewsString.length-6);
+            viewsString = viewsString.replace(',', '');
+            viewsString = viewsString.replace(',', '');
+            viewsString = viewsString.replace(',', '');
+            var type = 'youtube';
+
+            var viewsNum = parseInt(viewsString);
+
+            return {
+                type,
+                name,
+                description,
+                //viewsString,
+                viewsNum,
+                subscriberString,
+                subscriberNum,
+            }
+        })
+
+        await page.goto(req.body.youtubelink + "/featured", {waitUntil: 'networkidle2'});
+
+        let videoStats = await page.evaluate(() => {
+            var videos = [];
+            for(i = 0; i < 10; i++)
+                {
+                videos[i] = document.querySelectorAll('#items > ytd-grid-video-renderer')[i].innerText;
+                }
+            var type = 'youtube-videos';
+            return {
+                type,
+                videos,
+            }
+        })
+
+        console.log(youtubeStats);
+        console.log(videoStats);
         }
-    })
 
-    console.log(instagramStats);
+    if(req.body.instagramlink != "")
+    {    
+        
+        // using username for scraping
+        const positionOfUser = req.body.instagramlink.search('.com/');
+        let instaUser = req.body.instagramlink.slice(positionOfUser+5); //26
+        const positionOfSlash = instaUser.search('/');
+        instaUser = instaUser.slice(0,positionOfSlash);
 
-    /* planning on how im gonna output this thing
-    obj = {facebookstats, instagramstats, youtubestats}
-    fs.writeFile("./" + new Date().toString() + ".txt", JSON.stringify(obj), function(err) {
-        if(err) {
-            return console.log(err);
-        }
-    
-        console.log("The file was saved!");
-    }); 
-    */
+        var username, numFollowers, numFollowing, bio, website, numPosts, posts, fullName; 
 
-    await browser.close();
+        let instagramStats = ig.scrapeUserPage(instaUser).then(result => {
+            username = instaUser;
+            numFollowers = result.user.edge_followed_by.count;
+            numFollowing =  result.user.edge_follow.count;
+            bio = result.user.biography;
+            website = result.user.external_url;
+            posts = [];
+            numPosts = result.total; 
 
-    })();
+            
+
+            for(var i = 0; i < result.total; i++)
+            {
+                var numLikes = result.medias[i].like_count;
+                var numComments = result.medias[i].comment_count;
+                posts[i] = {
+                    numLikes,
+                    numComments,
+                }
+            }
+            fullName = user.full_name;
+
+            //testing print it this way instead of printing 
+            //"instagramStats" due to it printing a promise and not a 
+            // json format
+            console.log("{");
+            console.log("username: '" + username + "',");
+            console.log("fullName: '" + fullName + "',");
+            console.log("numFollowers: '" + numFollowers+ "',");
+            console.log("numFollowing: '" + numFollowing+ "',");
+            console.log("bio: '" + bio + "',");
+            console.log("website: '" + website + "',");
+            console.log("posts: " + posts + ",");
+            console.log("numPosts: " + numPosts + ",");
+            console.log("}");
+
+            return {
+                fullName,
+                username, 
+                numPosts,
+                numFollowers,
+                numFollowing,
+                bio,
+                website,
+                posts,
+            }
+        })
+
+        console.log(instagramStats);
+    }
+ 
+        await browser.close();
+
+        })();
 
 
     res.status(200).json({ info: 'scrape page', name: req.body.name })

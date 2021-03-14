@@ -9,10 +9,17 @@
   },
   "dependencies": {
     "axios": "^0.21.1",
+    "global": "^4.4.0",
+    "instagram-basic-data-scraper-with-username": "^4.0.1",
+    "instagram-scraper": "^1.0.6",
     "next": "10.0.8",
     "puppeteer": "^8.0.0",
     "react": "17.0.1",
     "react-dom": "17.0.1",
-    "react-hook-form": "^6.15.4"
+    "react-hook-form": "^6.15.4",
+    "scraper-instagram": "^1.0.17"
+  },
+  "devDependencies": {
+    "instagram-scraping": "^1.0.13"
   }
 }
