@@ -133,6 +133,7 @@ export default (req, res) => {
         console.log(instagramStats);
     }
  
+    /*
     if(req.body.facebooklink != "")
     {    
     (async () => { 
@@ -162,6 +163,7 @@ export default (req, res) => {
         console.log(facebookStats);
     })();
 }
+*/
 
 
         await browser.close();
