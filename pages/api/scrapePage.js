@@ -104,51 +104,20 @@ export default (req, res) => {
     {    
         
         // using username for scraping
-        //cuts out just the username from the link, or just uses the 
-        //username if its already in that format
+        //cuts out just the username from the link
         const positionOfUser = req.body.instagramlink.search('.com/');
+        var instaUser = req.body.instagramlink;
+
         if(positionOfUser != -1)
         {
-            let instaUser = req.body.instagramlink.slice(positionOfUser+5);
+            instaUser = req.body.instagramlink.slice(positionOfUser+5);
             const positionOfSlash = instaUser.search('/');
             instaUser = instaUser.slice(0,positionOfSlash);
         }
 
-        var username, numFollowers, numFollowing, bio, website, numPosts, posts, fullName; 
-
-        var rawObject = ig.scrapeUserPage(instaUser).then(result => {
-            username = instaUser;
-            numFollowers = result.user.edge_followed_by.count;
-            numFollowing =  result.user.edge_follow.count;
-            bio = result.user.biography;
-            website = result.user.external_url;
-            posts = [];
-            numPosts = result.total; 
-            for(var i = 0; i < result.total; i++)
-            {
-                var numLikes = result.medias[i].like_count;
-                var numComments = result.medias[i].comment_count;
-                posts[i] = {
-                    numLikes,
-                    numComments,
-                }
-            }
-            fullName = user.full_name;
-        })
-
-       const instagramStats = {
-            "type":"instagram",
-            "fullname":fullName,
-            "username":username, 
-            "numposts":numPosts,
-            "numFollowers":numFollowers,
-            "numFollowing":numFollowing,
-            "bio":bio,
-            "website":website,
-            "posts":posts,
-        }
-
-        console.log(instagramStats);
+        ig.scrapeTag(instaUser).then(result => {
+            console.dir(result);
+          });
     }
  
     
@@ -207,8 +176,10 @@ export default (req, res) => {
             var posts = [];
             for(i = 0; i < 2; i++)
                 {
-                if(document.querySelectorAll('div[class="_5va1 _427x')[i].innerText != null)
+                if(document.querySelectorAll('div[class="_5va1 _427x')[i] != null)
                     posts[i] = document.querySelectorAll('div[class="_5va1 _427x')[i].innerText;
+                else
+                    posts[i] = null;
                 }
             var type = 'facebook-posts';
             return {
@@ -217,10 +188,8 @@ export default (req, res) => {
             }
         })
         console.log(postStats);
-
         console.log(facebookStats);
 }
-
 
         await browser.close();
 
