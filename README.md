@@ -26,9 +26,12 @@ After, check your console log to see what's spit out
 This README will be updates as I build out this tool.
 
 ## Background
-	This tool is intended to give prospective users the ability to claim their media kits and easily build up their account right after creating an account. Marketing a media kit to a prospective user with their own personal information will make users much more inclined to use the service. We are basing this model off of how Yelp blew up their site online:
+
+This tool is intended to give prospective users the ability to claim their media kits and easily build up their account right after creating an account. Marketing a media kit to a prospective user with their own personal information will make users much more inclined to use the service. We are basing this model off of how Yelp blew up their site online:
 
 	Yelp, “purchased a database of over 20 million business locations. This database was old and inaccurate, but it created the framework for what Yelp called “claimed business locations ” (Jordan Bowman)
+
+[Yelp Article](https://medium.com/swlh/building-yelp-bc4e62c4db3b)
 
 With our ghost-profile we would take the best of Yelp’s system and improve upon it. The tool will scrape data from public and free data to be able to produce unclaimed media kits. The data we collect will also be up to date and accurate, as opposed to Yelp’s model. 
 
