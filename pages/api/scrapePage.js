@@ -171,7 +171,7 @@ export default (req, res) => {
             if(document.querySelectorAll('div[class="_4-u2 _6590 _3xaf _4-u8"] > div > div > div > div')[0] != null)
             {
                 likes = document.querySelectorAll('div[class="_4-u2 _6590 _3xaf _4-u8"] > div > div > div > div')[0].innerText;
-                likes = likes.slice(0,likes.length-19).replace(',', '').replace(',', '').replace(',', '');
+                likes = likes.slice(0,likes.length-17).replace(',', '').replace(',', '').replace(',', '');
             }
             if(document.querySelectorAll('div[class="_4-u2 _6590 _3xaf _4-u8"] > div > div > div._4bl9 > div')[1] != null)
             {
@@ -181,7 +181,12 @@ export default (req, res) => {
             if(document.querySelectorAll('#u_0_q_Oa > div > a')[1] != null)
                 website = document.querySelectorAll('#u_0_q_Oa > div > a')[1].innerText;
             if(document.querySelectorAll('div[class="_4bl9"] > div')[4] != null)
+                {
                 category = document.querySelectorAll('div[class="_4bl9"] > div')[4].innerText;
+                //handles for some pages that added "contact on messenger"
+                if(category.search('Contact') > -1)
+                    category = document.querySelectorAll('div[class="_4bl9"] > div')[5].innerText;
+                }
             var type = 'facebook';
 
             
@@ -197,6 +202,21 @@ export default (req, res) => {
                 category,
             }
         })
+
+        let postStats = await page.evaluate(() => {
+            var posts = [];
+            for(i = 0; i < 2; i++)
+                {
+                if(document.querySelectorAll('div[class="_5va1 _427x')[i].innerText != null)
+                    posts[i] = document.querySelectorAll('div[class="_5va1 _427x')[i].innerText;
+                }
+            var type = 'facebook-posts';
+            return {
+                type,
+                posts,
+            }
+        })
+        console.log(postStats);
 
         console.log(facebookStats);
 }
