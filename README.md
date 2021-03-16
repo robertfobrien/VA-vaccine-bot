@@ -13,7 +13,8 @@ yarn dev
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
 Then, type the name and links into the textbox and press
-```submit
+```bash
+submit
 ```
 
 After, check your console log to see what's spit out
