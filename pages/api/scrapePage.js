@@ -4,61 +4,88 @@ const ig = require('instagram-scraping');
 export default (req, res) => {
 
     (async () => { 
+
+        console.log('############################');
+        console.log("{");
+        console.log("type: '" + "name" + "',");
+        console.log("name: '" + req.body.name + "',");
+        console.log("}");
         let browser = await puppeteer.launch({headless: true}); //turn to FALSE to debug
-        console.log('SCRAPING...')
         let page = await browser.newPage(); 
 
-        if(req.body.youtubelink != "")
+    if(req.body.youtubelink != "")
         {
         await page.goto(req.body.youtubelink + '/about', {waitUntil: 'networkidle2'});
         
         let youtubeStats = await page.evaluate(() => {
 
-            var name = document.querySelector('#channel-name > div > div').innerText;
-            var description = document.querySelector('#description').innerText;
-            var subscriberString = document.querySelector('#subscriber-count').innerText;
-            subscriberString = subscriberString.slice(0, subscriberString.length-12);
+            var type, name,description,viewsString,viewsNum,subscriberString,subscriberNum, subscriberPrefix;
 
-            var endLetter = document.querySelector('#subscriber-count').innerText.slice(0,document.querySelector('#subscriber-count').innerText.length-12);
-            endLetter = endLetter.slice(endLetter.length-1);
+            var nameObj = document.querySelector('#channel-name > div > div');
+            if(nameObj != null)
+                name = nameObj.innerText;
 
-            var subscriberPrefix = subscriberString.slice(0,subscriberString.length-1);
+            var descriptionObj = document.querySelector('#description');
+            if(descriptionObj != null)
+                description = descriptionObj.innerText;
+            
+            var subscriberStringObj = document.querySelector('#subscriber-count');
+            if(subscriberStringObj != null)
+            {
+                subscriberString = subscriberStringObj.innerText;
+                subscriberString = subscriberString.slice(0, subscriberString.length-12);
+                subscriberPrefix = subscriberString.slice(0,subscriberString.length-1);
+            }
 
-            if (endLetter == "K")
-                var subscriberNum = parseInt(parseFloat(subscriberPrefix)*1000);
-            else if (endLetter == "M")
-                var subscriberNum = parseInt(parseFloat(subscriberPrefix)*1000000);
-            else 
-                var subscriberNum = parseInt(subscriberString);
+            var endLetterObj = document.querySelector('#subscriber-count');
+            if(endLetterObj != null)
+            {
+                var endLetter = document.querySelector('#subscriber-count').innerText.slice(0,document.querySelector('#subscriber-count').innerText.length-12);
+                endLetter = endLetter.slice(endLetter.length-1);
+                if (endLetter == "K")
+                    subscriberNum = parseInt(parseFloat(subscriberPrefix)*1000);
+                else if (endLetter == "M")
+                    subscriberNum = parseInt(parseFloat(subscriberPrefix)*1000000);
+                 else 
+                subscriberNum = parseInt(subscriberString);
+            }
 
 
-            var viewsString = document.querySelectorAll('#right-column > yt-formatted-string')[2].innerText;
-            viewsString = viewsString.slice(0,viewsString.length-6);
-            viewsString = viewsString.replace(',', '');
-            viewsString = viewsString.replace(',', '');
-            viewsString = viewsString.replace(',', '');
+            
+
+
+        
+            var viewStringObj = document.querySelectorAll('#right-column > yt-formatted-string')[2];
+            if (viewStringObj != null)
+            {
+                viewsString = document.querySelectorAll('#right-column > yt-formatted-string')[2].innerText;
+                viewsString = viewsString.slice(0,viewsString.length-6);
+                viewsString = viewsString.replace(',', '').replace(',', '').replace(',', '');
+                viewsNum = parseInt(viewsString);
+            }
+
             var type = 'youtube';
-
-            var viewsNum = parseInt(viewsString);
 
             return {
                 type,
                 name,
                 description,
-                //viewsString,
+                viewsString,
                 viewsNum,
                 subscriberString,
                 subscriberNum,
             }
         })
 
+        
         await page.goto(req.body.youtubelink + "/featured", {waitUntil: 'networkidle2'});
 
         let videoStats = await page.evaluate(() => {
             var videos = [];
-            for(i = 0; i < 10; i++)
+            for(i = 0; i < 5; i++)
                 {
-                videos[i] = document.querySelectorAll('#items > ytd-grid-video-renderer')[i].innerText;
+                if(document.querySelectorAll('#items > ytd-grid-video-renderer')[i] != null)
+                    videos[i] = document.querySelectorAll('#items > ytd-grid-video-renderer')[i].innerText;
                 }
             var type = 'youtube-videos';
             return {
@@ -66,23 +93,30 @@ export default (req, res) => {
                 videos,
             }
         })
-
-        console.log(youtubeStats);
         console.log(videoStats);
+        
+        
+       console.log(youtubeStats);
+        
         }
 
     if(req.body.instagramlink != "")
     {    
         
         // using username for scraping
+        //cuts out just the username from the link, or just uses the 
+        //username if its already in that format
         const positionOfUser = req.body.instagramlink.search('.com/');
-        let instaUser = req.body.instagramlink.slice(positionOfUser+5); //26
-        const positionOfSlash = instaUser.search('/');
-        instaUser = instaUser.slice(0,positionOfSlash);
+        if(positionOfUser != -1)
+        {
+            let instaUser = req.body.instagramlink.slice(positionOfUser+5);
+            const positionOfSlash = instaUser.search('/');
+            instaUser = instaUser.slice(0,positionOfSlash);
+        }
 
         var username, numFollowers, numFollowing, bio, website, numPosts, posts, fullName; 
 
-        let instagramStats = ig.scrapeUserPage(instaUser).then(result => {
+        var rawObject = ig.scrapeUserPage(instaUser).then(result => {
             username = instaUser;
             numFollowers = result.user.edge_followed_by.count;
             numFollowing =  result.user.edge_follow.count;
@@ -90,9 +124,6 @@ export default (req, res) => {
             website = result.user.external_url;
             posts = [];
             numPosts = result.total; 
-
-            
-
             for(var i = 0; i < result.total; i++)
             {
                 var numLikes = result.medias[i].like_count;
@@ -103,67 +134,72 @@ export default (req, res) => {
                 }
             }
             fullName = user.full_name;
-
-            //testing print it this way instead of printing 
-            //"instagramStats" due to it printing a promise and not a 
-            // json format
-            console.log("{");
-            console.log("username: '" + username + "',");
-            console.log("fullName: '" + fullName + "',");
-            console.log("numFollowers: '" + numFollowers+ "',");
-            console.log("numFollowing: '" + numFollowing+ "',");
-            console.log("bio: '" + bio + "',");
-            console.log("website: '" + website + "',");
-            console.log("posts: " + posts + ",");
-            console.log("numPosts: " + numPosts + ",");
-            console.log("}");
-
-            return {
-                fullName,
-                username, 
-                numPosts,
-                numFollowers,
-                numFollowing,
-                bio,
-                website,
-                posts,
-            }
         })
+
+       const instagramStats = {
+            "type":"instagram",
+            "fullname":fullName,
+            "username":username, 
+            "numposts":numPosts,
+            "numFollowers":numFollowers,
+            "numFollowing":numFollowing,
+            "bio":bio,
+            "website":website,
+            "posts":posts,
+        }
 
         console.log(instagramStats);
     }
  
-    /*
+    
     if(req.body.facebooklink != "")
     {    
-    (async () => { 
-        await page.goto(req.body.facebooklink, {waitUntil: 'networkidle2'});
+        
+        await page.goto(req.body.facebooklink , {waitUntil: 'networkidle2'});
 
         let facebookStats = await page.evaluate(() => {
-            var name = document.querySelector('a[class="_64-f"]').innerText;
-            var likes = document.querySelectorAll('div[class="_4-u2 _6590 _3xaf _4-u8"] > div > div > div')[1].innerText
-            var followers = document.querySelectorAll('div[class="_4-u2 _6590 _3xaf _4-u8"] > div > div')[2].innerText;
-            var website = document.querySelector('#u_0_q_x4').innerText;
-            var category = document.querySelectorAll('div[class="_4-u2 _u9q _3xaf _4-u8"] > div ')[3].innerText;
 
+            var type,
+            name,
+            likes,
+            followers,
+            website,
+            category;
+
+            if(document.querySelector('a[class="_64-f"] > span') != null)
+                name = document.querySelector('a[class="_64-f"] > span').innerText;
+            if(document.querySelectorAll('div[class="_4-u2 _6590 _3xaf _4-u8"] > div > div > div > div')[0] != null)
+            {
+                likes = document.querySelectorAll('div[class="_4-u2 _6590 _3xaf _4-u8"] > div > div > div > div')[0].innerText;
+                likes = likes.slice(0,likes.length-19).replace(',', '').replace(',', '').replace(',', '');
+            }
+            if(document.querySelectorAll('div[class="_4-u2 _6590 _3xaf _4-u8"] > div > div > div._4bl9 > div')[1] != null)
+            {
+                followers = document.querySelectorAll('div[class="_4-u2 _6590 _3xaf _4-u8"] > div > div > div._4bl9 > div')[1].innerText;
+                followers = followers.slice(0,followers.length-19).replace(',', '').replace(',', '').replace(',', '');
+            }
+            if(document.querySelectorAll('#u_0_q_Oa > div > a')[1] != null)
+                website = document.querySelectorAll('#u_0_q_Oa > div > a')[1].innerText;
+            if(document.querySelectorAll('div[class="_4bl9"] > div')[4] != null)
+                category = document.querySelectorAll('div[class="_4bl9"] > div')[4].innerText;
             var type = 'facebook';
-            var url = req.body.facebooklink;
+
+            
+            var likesNum = parseInt(likes);
+            var followersNum = parseInt(followers);
 
             return {
                 type,
-                url,
                 name,
-                likes,
-                followers,
+                likesNum,
+                followersNum,
                 website,
                 category,
             }
         })
 
         console.log(facebookStats);
-    })();
 }
-*/
 
 
         await browser.close();
