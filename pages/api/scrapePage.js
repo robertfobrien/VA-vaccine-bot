@@ -1,3 +1,5 @@
+import next from "next";
+
 const puppeteer = require("puppeteer");
 const ig = require('instagram-scraping');
 
@@ -5,7 +7,7 @@ export default (req, res) => {
 
     (async () => { 
 
-        console.log('############################');
+        console.log('####################################################################################################################');
         console.log("{");
         console.log("type: '" + "name" + "',");
         console.log("name: '" + req.body.name + "',");
@@ -82,10 +84,66 @@ export default (req, res) => {
 
         let videoStats = await page.evaluate(() => {
             var videos = [];
-            for(i = 0; i < 5; i++)
+            var videoStrings = [];
+            const videosNum = 4;
+
+            for(i = 0; i < videosNum; i++)
                 {
-                if(document.querySelectorAll('#items > ytd-grid-video-renderer')[i] != null)
-                    videos[i] = document.querySelectorAll('#items > ytd-grid-video-renderer')[i].innerText;
+                    if(document.querySelectorAll('#items > ytd-grid-video-renderer')[i] != null)
+                        videoStrings[i] = document.querySelectorAll('#items > ytd-grid-video-renderer')[i].innerText;
+                }
+
+            var  videoTime = [], videoDescription = [], videoViewsString = [], videoViewsNum = [], daysAgo = []; 
+
+            for(i = 0; i < videosNum; i++)
+                {
+                
+
+                var videoString, endPos, startPos;
+                    
+                    videoString = videoStrings[i];
+                    
+                    
+                    startPos = 0;
+                    endPos = videoString.search('\n');
+
+                    videoTime[i] = videoString.slice(startPos,endPos);
+
+                    endPos = endPos; 
+
+                    videoString = videoString.slice(endPos);
+
+                    startPos = videoString.search('\n') + 3;
+                    videoString = videoString.slice(startPos);
+
+                    startPos = videoString.search('\n')+1;
+                    videoString = videoString.slice(startPos);
+                    endPos = videoString.search('\n');
+
+                    videoDescription[i] = videoString.slice(0,endPos);
+
+                    videoViewsString[i] = videoString.slice(endPos + 2, endPos + 10);
+                    var last = videoViewsString[i].search('\n');
+                    videoViewsString[i] = videoViewsString[i].slice(0, last - 4);
+
+                    var endLetter = videoViewsString[i].slice(videoViewsString[i].length-1);
+                    if (endLetter == "K")
+                        videoViewsNum[i] = parseInt(parseFloat(videoViewsString[i].slice(0, videoViewsString[i].length-1))*1000);
+                    else if (endLetter == "M")
+                        videoViewsNum[i] = parseInt(parseFloat(videoViewsString[i].slice(0, videoViewsString[i].length-1))*1000000);
+                    else 
+                        videoViewsNum[i] = parseInt(videoViewsString[i]);
+
+                    daysAgo[i] = videoString.slice(videoString.search('views\n')+6);
+
+                    videos[i] =
+                    {
+                        "time": videoTime[i],
+                        "description": videoDescription[i],
+                        "viewsString": videoViewsString[i],
+                        "viewsNum": videoViewsNum[i],
+                        "posted": daysAgo[i],
+                    }
                 }
             var type = 'youtube-videos';
             return {
@@ -115,7 +173,7 @@ export default (req, res) => {
             instaUser = instaUser.slice(0,positionOfSlash);
         }
 
-        ig.scrapeTag(instaUser).then(result => {
+        ig.scrapeUserPage(instaUser).then(result => {
             console.dir(result);
           });
     }
