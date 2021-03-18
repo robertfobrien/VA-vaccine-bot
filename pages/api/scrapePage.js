@@ -85,12 +85,17 @@ export default (req, res) => {
         let videoStats = await page.evaluate(() => {
             var videos = [];
             var videoStrings = [];
+            var videoHref = [];
             const videosNum = 4;
 
             for(i = 0; i < videosNum; i++)
                 {
                     if(document.querySelectorAll('#items > ytd-grid-video-renderer')[i] != null)
+                    {
                         videoStrings[i] = document.querySelectorAll('#items > ytd-grid-video-renderer')[i].innerText;
+                        videoHref[i] = document.querySelectorAll('a[id="video-title"]')[i].getAttribute('href');
+                    }
+
                 }
 
             var  videoTime = [], videoDescription = [], videoViewsString = [], videoViewsNum = [], daysAgo = []; 
@@ -101,18 +106,15 @@ export default (req, res) => {
 
                 var videoString, endPos, startPos;
                     
+                    //parses out the videos information
                     videoString = videoStrings[i];
-                    
                     
                     startPos = 0;
                     endPos = videoString.search('\n');
 
                     videoTime[i] = videoString.slice(startPos,endPos);
 
-                    endPos = endPos; 
-
                     videoString = videoString.slice(endPos);
-
                     startPos = videoString.search('\n') + 3;
                     videoString = videoString.slice(startPos);
 
@@ -122,10 +124,13 @@ export default (req, res) => {
 
                     videoDescription[i] = videoString.slice(0,endPos);
 
-                    videoViewsString[i] = videoString.slice(endPos + 2, endPos + 10);
-                    var last = videoViewsString[i].search('\n');
-                    videoViewsString[i] = videoViewsString[i].slice(0, last - 4);
+                    startPos = videoString.search('\n')+1;
+                    videoString = videoString.slice(startPos);
+                    endPos = videoString.search('\n') - 6;
 
+                    videoViewsString[i] = videoString.slice(0, endPos);
+
+                    //handles Million and Thousand views (m / k)
                     var endLetter = videoViewsString[i].slice(videoViewsString[i].length-1);
                     if (endLetter == "K")
                         videoViewsNum[i] = parseInt(parseFloat(videoViewsString[i].slice(0, videoViewsString[i].length-1))*1000);
@@ -138,11 +143,12 @@ export default (req, res) => {
 
                     videos[i] =
                     {
-                        "time": videoTime[i],
-                        "description": videoDescription[i],
+                        "length": videoTime[i],
+                        "title": videoDescription[i],
                         "viewsString": videoViewsString[i],
                         "viewsNum": videoViewsNum[i],
                         "posted": daysAgo[i],
+                        "href": videoHref[i],
                     }
                 }
             var type = 'youtube-videos';
