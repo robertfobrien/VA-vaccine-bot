@@ -5,6 +5,7 @@ const ig = require('instagram-scraping');
 
 export default (req, res) => {
 
+
     (async () => { 
 
         console.log('####################################################################################################################');
@@ -80,87 +81,80 @@ export default (req, res) => {
         })
 
         
-        await page.goto(req.body.youtubelink + "/featured", {waitUntil: 'networkidle2'});
 
-        let videoStats = await page.evaluate(() => {
-            var videos = [];
-            var videoStrings = [];
-            var videoHref = [];
-            const videosNum = 4;
+        await page.goto(req.body.youtubelink, {waitUntil: 'networkidle2'});
+        //Youtube video arrays and settings:
+        var  videos = [];
 
-            for(i = 0; i < videosNum; i++)
+
+        const videoHref = await page.evaluate(() => {
+            var hrefs = [];
+            for(i = 0; i < 5; i++)
                 {
                     if(document.querySelectorAll('#items > ytd-grid-video-renderer')[i] != null)
-                    {
-                        videoStrings[i] = document.querySelectorAll('#items > ytd-grid-video-renderer')[i].innerText;
-                        videoHref[i] = document.querySelectorAll('a[id="video-title"]')[i].getAttribute('href');
-                    }
-
+                        hrefs[i] = document.querySelectorAll('a[id="video-title"]')[i].getAttribute('href');
                 }
-
-            var  videoTime = [], videoDescription = [], videoViewsString = [], videoViewsNum = [], daysAgo = []; 
-
-            for(i = 0; i < videosNum; i++)
-                {
-                
-
-                var videoString, endPos, startPos;
-                    
-                    //parses out the videos information
-                    videoString = videoStrings[i];
-                    
-                    startPos = 0;
-                    endPos = videoString.search('\n');
-
-                    videoTime[i] = videoString.slice(startPos,endPos);
-
-                    videoString = videoString.slice(endPos);
-                    startPos = videoString.search('\n') + 3;
-                    videoString = videoString.slice(startPos);
-
-                    startPos = videoString.search('\n')+1;
-                    videoString = videoString.slice(startPos);
-                    endPos = videoString.search('\n');
-
-                    videoDescription[i] = videoString.slice(0,endPos);
-
-                    startPos = videoString.search('\n')+1;
-                    videoString = videoString.slice(startPos);
-                    endPos = videoString.search('\n') - 6;
-
-                    videoViewsString[i] = videoString.slice(0, endPos);
-
-                    //handles Million and Thousand views (m / k)
-                    var endLetter = videoViewsString[i].slice(videoViewsString[i].length-1);
-                    if (endLetter == "K")
-                        videoViewsNum[i] = parseInt(parseFloat(videoViewsString[i].slice(0, videoViewsString[i].length-1))*1000);
-                    else if (endLetter == "M")
-                        videoViewsNum[i] = parseInt(parseFloat(videoViewsString[i].slice(0, videoViewsString[i].length-1))*1000000);
-                    else 
-                        videoViewsNum[i] = parseInt(videoViewsString[i]);
-
-                    daysAgo[i] = videoString.slice(videoString.search('views\n')+6);
-
-                    videos[i] =
-                    {
-                        "length": videoTime[i],
-                        "title": videoDescription[i],
-                        "viewsString": videoViewsString[i],
-                        "viewsNum": videoViewsNum[i],
-                        "posted": daysAgo[i],
-                        "href": videoHref[i],
-                    }
-                }
-            var type = 'youtube-videos';
-            return {
-                type,
-                videos,
-            }
+            return hrefs;
         })
-        console.log(videoStats);
+
+
+        var videoEmbed = []; 
+        for(var j = 0; j < 5; j++)
+            videoEmbed[j] = '<iframe width="560" height="315" src="https://www.youtube.com/embed/' + videoHref[j].slice(9) + '" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>';
+
+
+        
+
+        for(var j = 0; j < 5; j++)
+            {
+                //TODO sometime the waituntil will not do everything we need it to and sometimes cannot see the page yet when searching later. 
+            await page.goto('https://www.youtube.com' + videoHref[j], {waitUntil: 'networkidle0'});
+            let videoStats = await page.evaluate(() => 
+            {
+                
+                let videoViews = document.querySelector('span[class="view-count style-scope ytd-video-view-count-renderer"]').innerText;
+                let videoTitle = document.querySelector('h1[class="title style-scope ytd-video-primary-info-renderer"]').innerText;
+                let videoPosted = document.querySelectorAll('yt-formatted-string[class="style-scope ytd-video-primary-info-renderer"]')[1].innerText;
+                let videoLikes = document.querySelectorAll('yt-formatted-string[class="style-scope ytd-toggle-button-renderer style-text"]')[0].getAttribute('aria-label');
+                let videoDislikes = document.querySelectorAll('yt-formatted-string[class="style-scope ytd-toggle-button-renderer style-text"]')[1].getAttribute('aria-label');
+
+                function stringToNum(str) {
+                    str = str.slice(0,str.search(" "));
+                    while(str.search(",") != -1)
+                        {
+                            str = str.replace(',','');
+                        }
+                    return str
+                  }
+
+                videoViews = parseInt(stringToNum(videoViews));
+                videoLikes = parseInt(stringToNum(videoLikes));
+                videoDislikes = parseInt(stringToNum(videoDislikes));
+                videoPosted = new Date("" + videoPosted + ' 00:00:00');
+
+                return{
+                    "title": videoTitle,
+                    "views": videoViews,
+                    "posted": videoPosted.toString(),
+                    "likes": videoLikes,
+                    "dislikes": videoDislikes,
+                    }
+            })
+
+            const href = videoHref[j], embed = videoEmbed[j];
+            videos[j] = {
+                videoStats,
+                href,
+                embed,
+
+            }
+            console.log(videos[j]);
+
+        }
         
         
-       console.log(youtubeStats);
+        console.log(videos);
+        console.log(youtubeStats);
         
         }
 
