@@ -6,7 +6,7 @@ Users will then be able to claim the “ghost” profiles made for them as their
 
 ## How to use this tool
 
-run to install all the packages we use
+run to install all the packages:
 ```
 yarn
 ```
