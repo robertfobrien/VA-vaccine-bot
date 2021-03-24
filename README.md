@@ -23,7 +23,7 @@ Then, type your age and the zipcode in virginia and press
 submit
 ```
 
-## HOW TO MAKE SURE YOUUUU GET AN APPOINTMENT:
+## HOW TO MAKE SURE (INCREASE CHANCES) YOU GET AN APPOINTMENT:
 set notifications for the twitter account https://twitter.com/VAVaccineFinder
 and use these zipcodes as the zipcodes in the bot. the bot will populate the form with your info and then prompt you to pick an appointment. zipee!
 
