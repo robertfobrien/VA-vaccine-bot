@@ -80,6 +80,8 @@ export default (req, res) => {
             }
         })
 
+        console.dir(youtubeStats);
+
         
 
         await page.goto(req.body.youtubelink, {waitUntil: 'networkidle2'});
@@ -87,26 +89,26 @@ export default (req, res) => {
         var  videos = [];
 
 
-        var numVideos = 15; 
         const videoHref = await page.evaluate(() => {
             var hrefs = [];
-            for(i = 0; i < numVideos; i++)
+            //at max, 6 videos or however many they have, if they have less. 
+            for(i = 0; i < 6; i++)
                 {
-                    if(document.querySelectorAll('#items > ytd-grid-video-renderer')[i] != null)
+                    if(document.querySelectorAll('a[id="video-title"]')[i] != undefined)
                         hrefs[i] = document.querySelectorAll('a[id="video-title"]')[i].getAttribute('href');
                     else
-                        numVideos = i; 
+                        return hrefs;
                 }
             return hrefs;
         })
 
         var videoEmbed = []; 
-        for(var j = 0; j < 15; j++)
+        for(var j = 0; j < videoHref.length; j++)
             videoEmbed[j] = '<iframe width="560" height="315" src="https://www.youtube.com/embed/' + videoHref[j].slice(9) + '" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>';
         
         page.setViewport({ width: 1280, height: 1400 });
 
-        for(var j = 0; j < 15; j++)
+        for(var j = 0; j < videoHref.length; j++)
             {
                 //TODO sometime the waituntil will not do everything we need it to and sometimes cannot see the page yet when searching later. 
             await page.goto('https://www.youtube.com' + videoHref[j], {waitUntil: 'networkidle0'});
@@ -165,10 +167,9 @@ export default (req, res) => {
         }
         
         
-        console.log(videos);
-        console.log(youtubeStats);
+        console.dir(videos);
         
-        }
+    }//end of youtube scrape
 
     if(req.body.instagramlink != "")
     {    
@@ -185,19 +186,18 @@ export default (req, res) => {
         ig.scrapeUserPage(instaUser).then(result => {
             console.dir(result);
           });
-    }
- 
-    
+    }//end of instafram scrape
+
     if(req.body.facebooklink != "")
     {    
-        
-        await page.goto(req.body.facebooklink , {waitUntil: 'networkidle2'});
+        //   '/pg/' ensures that the link goes to a page, and not a profile.
+        // Any person who's stats matter will be on a page, not a profile. This forces that.
+        await page.goto( 'https://www.facebook.com/pg/' + req.body.facebooklink.slice(req.body.facebooklink.search('.com/')+5) , {waitUntil: 'networkidle2'});
 
+        
         page.setViewport({ width: 1280, height: 1400 });
 
         let facebookStats = await page.evaluate(() => {
-
-            window.scrollTo(0,window.innerHeight);
 
             var type,
             name,
@@ -205,45 +205,92 @@ export default (req, res) => {
             followers,
             website,
             category;
-            
-            if(document.querySelector('a[class="_64-f"] > span') != null)
-                name = document.querySelector('a[class="_64-f"] > span').innerText;
-            if(document.querySelectorAll('div[class="_4-u2 _6590 _3xaf _4-u8"] > div > div > div > div')[0] != null)
-            {
-                likes = document.querySelectorAll('div[class="_4-u2 _6590 _3xaf _4-u8"] > div > div > div > div')[0].innerText;
-                likes = likes.slice(0,likes.length-17).replace(',', '').replace(',', '').replace(',', '');
-            }
-            if(document.querySelectorAll('div[class="_4-u2 _6590 _3xaf _4-u8"] > div > div > div._4bl9 > div')[1] != null)
-            {
-                followers = document.querySelectorAll('div[class="_4-u2 _6590 _3xaf _4-u8"] > div > div > div._4bl9 > div')[1].innerText;
-                followers = followers.slice(0,followers.length-19).replace(',', '').replace(',', '').replace(',', '');
-            }
-            if(document.querySelectorAll('#u_0_q_Oa > div > a')[1] != null)
-                website = document.querySelectorAll('#u_0_q_Oa > div > a')[1].innerText;
-            if(document.querySelectorAll('div[class="_4bl9"] > div')[4] != null)
-                {
-                category = document.querySelectorAll('div[class="_4bl9"] > div')[4].innerText;
-                //handles for some pages that added "contact on messenger"
-                if(category.search('Contact') > -1)
-                    category = document.querySelectorAll('div[class="_4bl9"] > div')[5].innerText;
-                }
-            var type = 'facebook';
 
-            
-            var likesNum = parseInt(likes);
-            var followersNum = parseInt(followers);
+            function stringToNum(str) {
+                if(str == '')
+                    return
+                str = str.slice(0,str.search(" "));
+                while(str.search(",") != -1)
+                        str = str.replace(',','');
+                return str;
+              }
 
+            //loads a few more posts
+            window.scrollTo(0,window.innerHeight*2);
+            
+            //type
+            type = 'facebook';
+
+            //name
+            name = document.querySelectorAll('title')[0].innerText;
+            name = name.slice(0, name.search(' - '));
+
+                //like count ✔️
+                var j=0; 
+                while(j>=0)
+                    {
+                        if (document.querySelectorAll('div > div[class="_4bl9"]')[j] != null && document.querySelectorAll('div > div[class="_4bl9"]')[j].innerText.contains('people like this'))
+                            {
+                            likes = document.querySelectorAll('div > div[class="_4bl9"]')[j].innerText;
+                            j=-2;
+                            }
+                        j++;
+                    }
+                    likes = stringToNum(likes);
+
+
+                //follower count ✔️
+                j=0; 
+                while(j>=0)
+                    {
+                        if (document.querySelectorAll('div > div[class="_4bl9"]')[j] != null && document.querySelectorAll('div > div[class="_4bl9"]')[j].innerText.contains('people follow this'))
+                            {
+                            followers = document.querySelectorAll('div > div[class="_4bl9"]')[j].innerText;
+                            j=-2;
+                            }
+                        j++;
+                    }
+                    followers= stringToNum(followers);
+
+                //website
+                j=0; 
+                while(j>=0 && j<50)
+                    {
+                        if (document.querySelectorAll('div > div > a')[j].innerText.contains('www.'))
+                            {
+                            website = document.querySelectorAll('div > div > a')[j].innerText;
+                            j=-2;
+                            }
+                        j++;
+                    }
+                
+                             
+                
+                //category
+                j=10;
+                while(j>=0)
+                    {
+                        if (document.querySelectorAll('div > div > a')[20].hasAttribute('href') && document.querySelectorAll('div > div > a')[j].getAttribute('href').contains('/pages/category/'))
+                            {
+                            category = document.querySelectorAll('div > div > a')[j].innerText;
+                            j=-2;
+                            }
+                        j++;
+                    }
+                    
             return {
                 type,
                 name,
-                likesNum,
-                followersNum,
+                likes,
+                followers,
                 website,
                 category,
             }
         })
+        console.dir(facebookStats);
 
-        let postStats = await page.evaluate(() => {
+        /**
+         * let postStats = await page.evaluate(() => {
             var numPosts = 5;
             var posts = [], postText = [], postMedia = [], postLikes = [], postComments = [], postShares = [];
             for(i = 0; i < numPosts; i++)
@@ -276,6 +323,7 @@ export default (req, res) => {
                     postmedia[i] = medias; 
                     //end of media searching
 
+                    
                     postText[i] = document.querySelectorAll('div[class="kvgmc6g5 cxmmr5t8 oygrvhab hcukyx3x c1et5uql ii04i59q"] > div')[i].innerText;
                     postLikes[i] = document.querySelectorAll('div[class="du4w35lb k4urcfbm l9j0dhe7 sjgh65i0"]')[i].querySelectorAll('span[class="gpro0wi8 pcp91wgn"]')[0].innerText;
                     postComments[i] = document.querySelectorAll('div[class="du4w35lb k4urcfbm l9j0dhe7 sjgh65i0"]')[i].querySelectorAll('div[class="gtad4xkn"]')[0].innerText;
@@ -299,11 +347,117 @@ export default (req, res) => {
             }
         })
         console.log(postStats);
-        console.log(facebookStats);
-}
+         */
 
+        
+    }//end of facebook scrape 
+
+    if(req.body.twitterlink != "")
+    {        
+        await page.goto(req.body.twitterlink, {waitUntil: 'networkidle2'});
+        page.setViewport({ width: 1280, height: 1400 });
+        
+        let twitterStats = await page.evaluate(() => {
+            const link = document.URL;
+            const username = link.slice(link.indexOf('.com/')+5);
+            var type = 'twitter';
+            var followers = document.querySelectorAll('[href="/' + username + '/followers"]')[0].innerText;
+            var following = document.querySelectorAll('[href="/' + username + '/following"]')[0].innerText;
+            
+            
+            function strToNum(str) 
+            {
+                var numberStr = str.slice(0, str.search(" "));
+                        //e.x. '23.4K'
+                var numPrefix = numberStr.slice(0,numberStr.length-1);
+                var endLetter = numberStr.slice(numberStr.length-1);
+                        //e.x. 'K'
+                if (endLetter == "K")
+                    return parseInt(parseFloat(numPrefix)*1000);
+                else if (endLetter == "M")
+                    return parseInt(parseFloat(numPrefix)*1000000);
+                 else 
+                    return parseInt(numPrefix);
+            }
+
+            followers = strToNum(followers);
+            following = strToNum(following);
+
+            return{
+                type,
+                link,
+                username,
+                followers,
+                following,
+            }
+        })
+        console.log(twitterStats);
+    }//end of twitter scrape
+    
+    if(req.body.tiktoklink != "")
+    {
+        
+        await page.goto(req.body.tiktoklink, {waitUntil: 'networkidle2'});
+        page.setViewport({ width: 1280, height: 1400 });
+        let tiktokStats = await page.evaluate(() => {
+
+            var website = document.querySelectorAll('.share-links')[0].innerText;
+            var followers = document.querySelectorAll('strong[title="Followers"]')[0].innerText;
+            var likes = document.querySelectorAll('strong[title="Likes"]')[0].innerText;
+            var following = document.querySelectorAll('strong[title="Following"]')[0].innerText;
+            var description = document.querySelectorAll('.share-desc')[0].innerText;
+            var username = document.querySelectorAll('.share-title')[0].innerText
+
+            //get the tiktokHrefs
+            var tiktokHrefs = [];
+            for(var i = 0; i < 6; i++)
+            {
+                if(document.querySelectorAll('.video-feed-item')[i] != undefined)
+                    tiktokHrefs[i] = document.querySelectorAll('.video-feed-item')[i].querySelectorAll('a')[0].getAttribute('href');
+                else
+                    return tiktokHrefs; 
+            }
+
+            return{
+                username,
+                followers, 
+                following,
+                likes,
+                website, 
+                description,
+                tiktokHrefs,
+            }
+        });
+        console.log(tiktokStats);
+
+
+        //loop goes through each video, retrieves stats. 
+        var tiktokVideoStats = [];
+        for(var i = 0; i < tiktokStats.tiktokHrefs.length; i++)
+        {
+            await page.goto(tiktokStats.tiktokHrefs[i], {waitUntil: 'networkidle2'});
+            let videoStats = page.evaluate(() => {
+                var vidLikes = document.querySelectorAll('[title="like"]')[0].innerText;
+                var vidComments = document.querySelectorAll('[title="comment"]')[0].innerText;
+                var vidShares = document.querySelectorAll('[title="share"]')[0].innerText;
+                var vidCaption = document.querySelectorAll('.tt-video-meta-caption')[0].innerText;
+                var vidMusicLink = document.querySelectorAll('.video-music-wrapper')[0].getAttribute('href');
+                var vidMusicName = document.querySelectorAll('.video-music-wrapper')[0].innerText;
+
+                return{
+                    vidLikes,
+                    vidComments, 
+                    vidShares,
+                    vidCaption, 
+                    vidMusicName, 
+                    vidMusicLink,
+                }
+        })
+        tiktokVideoStats[i] = videoStats;
+        }
+        console.log(tiktokVideoStats);
+    }//end of tiktok scrape
         await browser.close();
-
         })();
 
 

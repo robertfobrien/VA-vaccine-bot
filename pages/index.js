@@ -21,7 +21,7 @@ export default function Home() {
 
       <main className={styles.main}>
         <h4>
-          Mediakits Ghost Media Scraper 1.0
+          Mediakits Ghost Media Scraper 1.1
         </h4>
 
     {/** Form in here, enter in info into form, on submit, data goes to onSubmit */}
@@ -32,10 +32,6 @@ export default function Home() {
       <input size='large' name="name" ref={register} />
       </div>
     <div>
-    <text>Facebook link &nbsp;</text>
-      <input name="facebooklink" ref={register} />
-      </div>
-    <div>
     <text>Instagram link &nbsp;</text>
       <input name="instagramlink" ref={register} />
       </div>
@@ -43,6 +39,19 @@ export default function Home() {
     <text>Youtube link &nbsp;&nbsp;&nbsp;&nbsp;</text>
       <input name="youtubelink" ref={register} />
       </div>
+      <div>
+    <text>TikTok link&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</text>
+      <input name="tiktoklink" ref={register} />
+      </div>
+      <div>
+    <text>Twitter link&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</text>
+      <input name="twitterlink" ref={register} />
+      </div>
+      <div>
+    <text>Facebook(beta)</text>
+      <input name="facebooklink" ref={register} />
+      </div>
+    
       
       <input type="submit" />
     </form>
