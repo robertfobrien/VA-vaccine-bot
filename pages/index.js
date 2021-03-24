@@ -15,42 +15,29 @@ export default function Home() {
   return (
     <div className={styles.container}>
       <Head>
-        <title>Media Scraper</title>
+        <title>VaccineSignup</title>
         <link rel="icon" href="/ghosticon.ico" />
       </Head>
 
       <main className={styles.main}>
         <h4>
-          Mediakits Ghost Media Scraper 1.1
+          Vaccine Signer Upper. Put the zipcode for CVS below. 
         </h4>
 
     {/** Form in here, enter in info into form, on submit, data goes to onSubmit */}
     {/* "handleSubmit" will validate your inputs before invoking "onSubmit" */}
     <form onSubmit={handleSubmit(onSubmit)}>
-    <div>
-      <text>Name &emsp;&emsp;&emsp;&nbsp;&nbsp;&nbsp;</text>
-      <input size='large' name="name" ref={register} />
-      </div>
-    <div>
-    <text>Instagram link &nbsp;</text>
-      <input name="instagramlink" ref={register} />
-      </div>
-    <div>
-    <text>Youtube link &nbsp;&nbsp;&nbsp;&nbsp;</text>
-      <input name="youtubelink" ref={register} />
+
+      <div>
+      <text>Zip Code</text>
+      <input size='large' name="zipcode" ref={register} />
       </div>
       <div>
-    <text>TikTok link&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</text>
-      <input name="tiktoklink" ref={register} />
+      <text>Age&emsp;&emsp;&emsp;&nbsp;&nbsp;&nbsp;</text>
+      <input size='large' name="age" ref={register} />
       </div>
-      <div>
-    <text>Twitter link&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</text>
-      <input name="twitterlink" ref={register} />
-      </div>
-      <div>
-    <text>Facebook(beta)</text>
-      <input name="facebooklink" ref={register} />
-      </div>
+      
+    
     
       
       <input type="submit" />
